@@ -42,7 +42,7 @@ def plot_mse_per_polynomial_degree(degrees, mse_arr):
     ax.plot(degrees, mse_arr, c='b', linewidth=2, marker='*')
     ax.set_xlabel('degrees')
     ax.set_ylabel('MSE')
-    ax.set_title('Polynomial Regress', fontsize=16)
+    ax.set_title('Polynomial Regression', fontsize=16)
     fig.tight_layout();
     
 
