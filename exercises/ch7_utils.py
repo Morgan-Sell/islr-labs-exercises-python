@@ -70,6 +70,14 @@ def calc_residuals(y_pred, y_true):
     return y_pred - y_true
 
 
+def calc_rss(y_pred, y_true):
+    '''
+    Calculates the residual sum of squares
+    '''
+    residuals = calc_residuals(y_pred, y_true)
+    rss = np.sum(np.square(residuals))
+    return rss
+
 def plot_linear_reg_model_and_residuals(X_test, y_test, y_pred, residuals):
     '''
     Creates twos plots: (1) linear regression; and (2) residuals
