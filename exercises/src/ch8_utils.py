@@ -99,3 +99,30 @@ def calc_train_test_mse_bagging_regr(X_train, X_test, y_train, y_test, max_depth
         test_mse_arr.append(test_mse)
 
     return train_cross_val_df, avg_train_mse_arr, test_mse_arr
+
+
+def display_bagging_rf_feature_importance(estimator, X, plot_title, fig_size):
+    '''
+    Produces a horizontal bar plot summarizing the information gain by each feature.
+    
+    Estimator must be a fitted model.
+    X must be a dataframe with the columns named as the features.
+    
+    '''
+    feature_importance = pd.DataFrame()
+    feature_importance['feature']=X.columns
+    feature_importance['importance'] = estimator.feature_importances_*100
+    feature_importance.sort_values('importance', axis=0, ascending=True, inplace=True)
+
+    fig, ax = plt.subplots(figsize=fig_size)
+
+    features = feature_importance['feature'].values
+    scores = feature_importance['importance'].values
+
+    ax.barh(features, scores)
+    ax.set_title(plot_title, fontsize=15)
+    ax.set_xlabel('Importance')
+    fig.tight_layout();
+    
+    
+    
