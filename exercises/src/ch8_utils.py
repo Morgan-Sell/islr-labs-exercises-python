@@ -10,7 +10,9 @@ import os
 
 from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier, export_graphviz
-from sklearn.ensemble import BaggingClassifier, RandomForestClassifier, BaggingRegressor, RandomForestRegressor, GradientBoostingRegressor
+from sklearn.ensemble import BaggingClassifier, BaggingRegressor 
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.ensemble import GradientBoostingRegressor, GradientBoostingClassifier
 from sklearn.metrics import mean_squared_error, confusion_matrix, classification_report
 from sklearn.inspection import permutation_importance
 
@@ -124,5 +126,61 @@ def display_bagging_rf_feature_importance(estimator, X, plot_title, fig_size):
     ax.set_xlabel('Importance')
     fig.tight_layout();
     
+def create_sorted_permutation_importance_df(model, X, y, n_iterations, random_state):
+    '''
+    Inputs:
+    Enter a fitted tree-based model, e.g. Random Forest or Gradient Boost.
+    X and y can be the training set or a hold-out set, i.e., validation or test.
+    X and y must be dataframes.
     
+    Return:
+    Returns a sorted dataframe comprised of each feature's importance for the number of selected iterations.
+    The dataframe is sorted by the features' medians.
+    
+    Misc:
+    Permutation importance is calculated by the difference between a baseline metric
+    and the resulting "score" when the feature is excluded.
+    The larger the value, the greater the importance.
+    Occasionally see negative values for permutation importances. 
+    In those cases, the predictions on the shuffled (or noisy) data happened 
+    to be more accurate than the real data. 
+    This happens when the feature didn't matter (should have had an importance close to 0),
+    but random chance caused the predictions on shuffled data to be more accurate.
+    '''
+    
+    results = permutation_importance(model, X, y, n_repeats=n_iterations,
+                                     random_state=random_state, n_jobs=-1)
+    
+    df = pd.DataFrame(results.importances.T * 100, columns=X.columns)
+    sorted_idx = df.median().sort_values().index[::-1]
+    sorted_df = df[sorted_idx]
+    return sorted_df
+
+def plot_horizontal_permutation_importance_boxplot(df, figsize, max_features):
+    '''
+    df must be sorted.
+    max_features is a limit on the number of features displayed
+    '''
+    
+    df2 = df.iloc[:, :max_features].copy()
+    
+    fig, ax = plt.subplots(figsize=figsize)
+    
+    sns.boxplot(data=df2, orient='h', ax=ax)
+    ax.set_xlabel('Importance')
+    ax.set_title('Permutation Importance', fontsize=16)
+    fig.tight_layout()
+
+def calculate_and_plot_permutation_importance(model, X, y, n_iterations, random_state, figsize, max_features):
+    '''
+    Inputs:
+    Enter a fitted tree-based model, e.g. Random Forest or Gradient Boost.
+    X and y can be the training set or a hold-out set, i.e., validation or test.
+    X and y must be dataframes.
+    max_features is the number of features to be displayed on the boxplot.
+    
+    Returns a horizontal box plot summarizing each feature's permutation importance.
+    '''
+    sorted_df = create_sorted_permutation_importance_df(model, X, y, n_iterations, random_state)
+    plot_horizontal_permutation_importance_boxplot(sorted_df, figsize, max_features)
     
