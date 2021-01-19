@@ -18,8 +18,6 @@ from sklearn.inspection import permutation_importance
 
 
 
-
-
 def print_tree(estimator, features, class_names=None, filled=True):
     '''
     Creates images of tree models using pydot.
@@ -103,30 +101,7 @@ def calc_train_test_mse_bagging_regr(X_train, X_test, y_train, y_test, max_depth
     return train_cross_val_df, avg_train_mse_arr, test_mse_arr
 
 
-def display_bagging_rf_feature_importance(estimator, X, plot_title, fig_size, max_features):
-    '''
-    Produces a horizontal bar plot summarizing the information gain by each feature.
-    
-    Estimator must be a fitted model.
-    X must be a dataframe with the columns named as the features.
-    
-    '''
-    feature_importance = pd.DataFrame()
-    feature_importance['feature']=X.columns
-    feature_importance['importance'] = estimator.feature_importances_*100
-    feature_importance.sort_values('importance', axis=0, ascending=True, inplace=True)
-    feature_importance = feature_importance.iloc[:max_features, :]
-    
-    fig, ax = plt.subplots(figsize=fig_size)
-
-    features = feature_importance['feature'].values
-    scores = feature_importance['importance'].values
-
-    ax.barh(features, scores)
-    ax.set_title(plot_title, fontsize=15)
-    ax.set_xlabel('Importance')
-    fig.tight_layout();
-    
+# PERMUTATION IMPORTANCE
 def create_sorted_permutation_importance_df(model, X, y, n_iterations, random_state):
     '''
     Inputs:
@@ -157,6 +132,7 @@ def create_sorted_permutation_importance_df(model, X, y, n_iterations, random_st
     sorted_df = df[sorted_idx]
     return sorted_df
 
+
 def plot_horizontal_permutation_importance_boxplot(df, figsize, max_features):
     '''
     df must be sorted.
@@ -167,10 +143,11 @@ def plot_horizontal_permutation_importance_boxplot(df, figsize, max_features):
     
     fig, ax = plt.subplots(figsize=figsize)
     
-    sns.boxplot(data=df2, orient='h', ax=ax)
+    sns.boxplot(data=df2, orient='h', ax=ax, palette='mako')
     ax.set_xlabel('Importance')
-    ax.set_title('Permutation Importance', fontsize=16)
-    fig.tight_layout()
+    ax.set_title('Permutation Importance', fontsize=18)
+    fig.tight_layout();
+
 
 def calculate_and_plot_permutation_importance(model, X, y, n_iterations, random_state, figsize, max_features):
     '''
@@ -184,4 +161,51 @@ def calculate_and_plot_permutation_importance(model, X, y, n_iterations, random_
     '''
     sorted_df = create_sorted_permutation_importance_df(model, X, y, n_iterations, random_state)
     plot_horizontal_permutation_importance_boxplot(sorted_df, figsize, max_features)
+
+
+# FEATURE IMPORTANCE
+def create_sorted_feature_importance_df(estimator, X):
+    '''
+    Estimator must be a fitted model.
+    X must be a dataframe with the columns named as the features.
+    X can be from the training or test set.
     
+    Returns a dataframe in descending order based on importance value.
+    '''
+    df = pd.DataFrame()
+    df['feature']=X.columns
+    df['importance'] = estimator.feature_importances_*100
+    df.sort_values('importance', axis=0, ascending=False, inplace=True)
+    return df
+
+
+def plot_barh_plot_feature_importance(df, fig_size, max_features):
+    '''
+    df must be sorted in ascending order.
+    df columns' names should be "feature" and "importance".
+    max_features constraints how many features are displayed.
+    The features w/ the greater importance are shown.
+    
+    Returns a horizontal barplot of the select features and their scores.
+    '''
+    df_sub = df.iloc[:max_features, :]
+    
+    fig, ax = plt.subplots(figsize=fig_size)
+    
+    sns.barplot(x='importance', y='feature', data=df_sub, ax=ax, palette='rocket')
+    ax.set_title('Feature Importance', fontsize=20)
+    ax.set_xlabel('Importance')
+    ax.set_ylabel('Features')
+    fig.tight_layout();
+
+    
+def calculate_and_plot_feature_importance(estimator, X, fig_size, max_features):
+    '''
+    Estimator must be a fitted model.
+    X must be a dataframe with the columns named as the features.
+    
+    Returns a horizontal barpolot of the selected features.
+    Scores/features are displayed in descending order.
+    '''
+    df = create_sorted_feature_importance_df(estimator, X)
+    plot_barh_plot_feature_importance(df, fig_size, max_features)
